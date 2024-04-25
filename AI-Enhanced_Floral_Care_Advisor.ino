@@ -1,43 +1,38 @@
-#include <DHT.h>                // Include DHT library
-#include <Wire.h>               // Include Wire library for I2C
-#include <BH1750FVI.h>          // Include BH1750FVI library for light sensor
-#include <ESP8266WiFi.h>        // Include ESP8266WiFi library
+#include <DHT.h>
+#include <Wire.h>
+#include <BH1750.h> // Include the BH1750 library
 
-#define DHTPIN D2               // Define the pin for DHT11 sensor
-#define DHTTYPE DHT11           // Define the type of DHT sensor
+#define DHTPIN 2       // Pin where the DHT11 is connected
+#define DHTTYPE DHT11  // Type of DHT sensor
+#define ANALOG_PIN 36  // Analog pin for soil moisture sensor
 
-#define SOIL_MOISTURE_PIN A0    // Define the pin for soil moisture sensor
-#define LIGHT_SENSOR_ADDR 0x23  // I2C address for BH1750FVI light sensor
-
-DHT dht(DHTPIN, DHTTYPE);       // Initialize DHT sensor
-BH1750FVI lightMeter;
-
-const char* ssid = "YOUR_WIFI_SSID";      // Your WiFi SSID
-const char* password = "YOUR_WIFI_PASSWORD";  // Your WiFi password
+DHT dht(DHTPIN, DHTTYPE);
+BH1750 lightMeter(0x23); // I2C address 0x23
 
 void setup() {
   Serial.begin(9600);
   dht.begin();
-  lightMeter.begin(BH1750FVI::ONE_TIME_HIGH_RES_MODE, LIGHT_SENSOR_ADDR);
-  
-  connectToWiFi();
+  lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE); // Initialize the light sensor
 }
 
 void loop() {
-  // Read temperature and humidity from DHT11 sensor
-  float humidity = dht.readHumidity();
+  delay(2000);  // Wait for 2 seconds between measurements
+
+  // Reading temperature and humidity from DHT11
   float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
 
-  // Read soil moisture
-  int soilMoisture = analogRead(SOIL_MOISTURE_PIN);
+  // Reading soil moisture
+  int soilMoisture = analogRead(ANALOG_PIN);
 
-  // Read light intensity
-  uint16_t lightIntensity = lightMeter.readLightLevel();
+  // Reading sunlight
+  float sunlight = lightMeter.readLightLevel(); // Read light level in lux
 
+  // Print the sensor readings
   Serial.print("Temperature: ");
   Serial.print(temperature);
-  Serial.println(" *C");
-
+  Serial.println(" °C");
+  
   Serial.print("Humidity: ");
   Serial.print(humidity);
   Serial.println(" %");
@@ -45,18 +40,9 @@ void loop() {
   Serial.print("Soil Moisture: ");
   Serial.println(soilMoisture);
 
-  Serial.print("Light Intensity: ");
-  Serial.println(lightIntensity);
+  Serial.print("Sunlight: ");
+  Serial.print(sunlight);
+  Serial.println(" lux");
 
-  delay(2000);  // Delay for 2 seconds
-}
-
-void connectToWiFi() {
-  Serial.println("Connecting to WiFi...");
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting...");
-  }
-  Serial.println("Connected to WiFi");
+  Serial.println("-------------------------");
 }
