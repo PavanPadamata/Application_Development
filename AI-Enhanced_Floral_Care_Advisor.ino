@@ -2,8 +2,8 @@
 #include <Wire.h>
 #include <BH1750.h> // Include the BH1750 library
 
-#define DHTPIN 2       // Pin where the DHT11 is connected
-#define DHTTYPE DHT11  // Type of DHT sensor
+#define DHTPIN 15       // Pin where the DHT11 is connected
+#define DHTTYPE DHT22  // Type of DHT sensor
 #define ANALOG_PIN 36  // Analog pin for soil moisture sensor
 
 DHT dht(DHTPIN, DHTTYPE);
