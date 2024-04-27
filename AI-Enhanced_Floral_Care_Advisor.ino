@@ -31,7 +31,6 @@ void setup() {
   }
   Serial.println("");
   Serial.println("WiFi connected");
-    // Print IP address
   Serial.println();
   Serial.print("Connected to Wi-Fi network with IP address: ");
   Serial.println(WiFi.localIP());
@@ -56,47 +55,30 @@ void loop() {
         Serial.write(c);
         if (c == '\n') {
           if (currentLine.length() == 0) {
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println();
-            client.println("<html><head><title>Environmental Data</title></head><body>");
-            client.println("<h1>Environmental Data</h1>");
-            // Reading temperature and humidity
-            float temperature = dht.readTemperature();
-            float humidity = dht.readHumidity();
-            client.print("Temperature: ");
-            client.print(temperature);
-            client.println(" °C<br>");
-            client.print("Humidity: ");
-            client.print(humidity);
-            client.println(" %");
-            client.println("<br>");
-            // Reading soil moisture
-        int soilMoisture = analogRead(ANALOG_PIN);
-        client.print("Soil Moisture: ");
-        client.println(soilMoisture);
-        client.println("<br>");
-
-        // Reading sunlight
-        float lux = lightMeter.readLightLevel();
-        client.print("Light: ");
-        client.print(lux);
-        client.println(" lx<br>");
-
-        client.println("</body></html>");
-        break;
-      } else {
-        currentLine = "";
+            handleClientRequest(client);
+            break;
+          } else {
+            currentLine = "";
+          }
+        } else if (c != '\r') {
+          currentLine += c;
+        }
       }
-    } else if (c != '\r') {
-      currentLine += c;
     }
+    client.stop();
+    Serial.println("Client disconnected.");
   }
 }
-// Clear the header variable
-currentLine = "";
-// Close the connection
-client.stop();
-Serial.println("Client disconnected.");
-  }
+
+void handleClientRequest(WiFiClient client) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-type: text/html");
+  client.println();
+
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  int soilMoisture = analogRead(ANALOG_PIN);
+  float lux = lightMeter.readLightLevel();
+
+  client.println("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Environmental Data</title></head><body><h1>Environmental Data</h1><div id='sensorData'><p>Temperature: " + String(temperature, 2) + " °C</p><p>Humidity: " + String(humidity, 2) + " %</p><p>Soil Moisture: " + String(soilMoisture) + "</p><p>Light: " + String(lux, 2) + " lx</p></div><script>setTimeout(function() { location.reload(); }, 5000);</script></body></html>");
 }
